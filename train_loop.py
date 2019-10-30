@@ -8,6 +8,7 @@ import os
 
 from utils.losses import LabelSmoothingLoss
 from utils.utils import compute_eer
+from utils.harvester import AllTripletSelector
 
 class TrainLoop(object):
 
@@ -139,7 +140,6 @@ class TrainLoop(object):
 		self.optimizer.zero_grad()
 
 		utterances, y = batch
-		utterances = torch.cat([utt_1, utt_2, utt_3, utt_4, utt_5], dim=0)
 
 		ridx = np.random.randint(utterances.size(3)//4, utterances.size(3))
 		utterances = utterances[:,:,:,:ridx].contiguous()

@@ -21,7 +21,7 @@ class Loader(Dataset):
 
 	def __getitem__(self, index):
 
-		utt, spk, y= self.utt_list[index]
+		utt, spk, y = self.utt_list[index]
 
 		if not self.open_file: self.open_file = h5py.File(self.hdf5_name, 'r')
 
@@ -69,7 +69,8 @@ class Loader(Dataset):
 
 		for i, spk in enumerate(self.spk2utt):
 			spk_utt_list = np.random.permutation(list(self.spk2utt[spk]))
-			self.utt_list.extend(spk_utt_list)
+			for utt in spk_utt_list:
+				self.utt_list.append([utt, spk, self.spk2label[spk]])
 
 class Loader_valid(Dataset):
 
