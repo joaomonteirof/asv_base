@@ -1,6 +1,7 @@
 from __future__ import print_function
 import argparse
 import torch
+from torch.utils.tensorboard import SummaryWriter
 import torchvision
 import torchvision.transforms as transforms
 import torch.optim as optim

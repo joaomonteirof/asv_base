@@ -51,7 +51,7 @@ if args.cuda:
 
 if args.logdir:
 	writer = SummaryWriter(log_dir=args.logdir, comment=args.model, purge_step=True)
-	writer.add_hparams(hparam_dict=dict(vars(args)))
+	writer.add_hparams(hparam_dict=dict(vars(args)), metric_dict={'.':0.0})
 else:
 	writer = None
 
