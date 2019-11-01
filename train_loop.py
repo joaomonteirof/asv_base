@@ -141,7 +141,7 @@ class TrainLoop(object):
 		utterances, y = batch
 		utterances = torch.cat([utt_1, utt_2, utt_3, utt_4, utt_5], dim=0)
 
-		ridx = np.random.randint(utterances.size(3)//4, utterances.size(3))
+		ridx = np.random.randint(utterances.size(-1)//3, utterances.size(-1))
 		utterances = utterances[:,:,:,:ridx].contiguous()
 
 		if self.cuda_mode:
@@ -173,7 +173,7 @@ class TrainLoop(object):
 			utterances = torch.cat([utt_1, utt_2, utt_3, utt_4, utt_5], dim=0)
 			y = torch.cat(5*[y], dim=0).squeeze().contiguous()
 
-			ridx = np.random.randint(utterances.size(3)//4, utterances.size(3))
+			ridx = np.random.randint(utterances.size(-1)//3, utterances.size(-1))
 			utterances = utterances[:,:,:,:ridx].contiguous()
 
 			if self.cuda_mode:
