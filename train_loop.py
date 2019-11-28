@@ -220,7 +220,8 @@ class TrainLoop(object):
 			# Load model state
 			self.model.load_state_dict(ckpt['model_state'])
 			# Load optimizer state
-			self.optimizer.optimizer.load_state_dict(ckpt['optimizer_state'])
+			self.optimizer.load_state_dict(ckpt['optimizer_state'])
+			self.optimizer.step_num = ckpt['total_iters']
 			# Load history
 			self.history = ckpt['history']
 			self.total_iters = ckpt['total_iters']
