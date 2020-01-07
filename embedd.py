@@ -12,7 +12,7 @@ import scipy.io as sio
 from utils.utils import *
 from librosa.feature import delta as delta_
 
-def prep_feats(data_, max_dur, delta=False):
+def prep_feats(data_, max_dur, max_nchunks, delta=False):
 	'''
 	data_ : [T, ncoef]
 	'''
@@ -35,7 +35,7 @@ def prep_feats(data_, max_dur, delta=False):
 	if delta:
 		features = np.concatenate([features, delta_(features, width=3, order=1), delta_(features, width=3, order=2)], axis=1)
 
-	return torch.from_numpy(features).float()
+	return torch.from_numpy(features).float()[:min(features.size(0), max_nchunks),...]
 
 if __name__ == '__main__':
 
@@ -45,6 +45,7 @@ if __name__ == '__main__':
 	parser.add_argument('--utt2spk', type=str, default=None, metavar='Path', help='Optional path for utt2spk')
 	parser.add_argument('--more-utt2spk', type=str, default=None, metavar='Path', help='Optional path for utt2spk')
 	parser.add_argument('--max-dur', type=int, default=800, metavar='S', help='Max duration in frames (default: 800)')
+	parser.add_argument('--max-nchunks', type=int, default=10, metavar='S', help='Max number of chunks for long files (default: 10)')
 	parser.add_argument('--cp-path', type=str, default=None, metavar='Path', help='Path for file containing model')
 	parser.add_argument('--out-path', type=str, default='./', metavar='Path', help='Path to output hdf file')
 	parser.add_argument('--model', choices=['resnet_mfcc', 'resnet_34', 'resnet_lstm', 'resnet_qrnn', 'resnet_stats', 'resnet_large', 'resnet_small', 'resnet_2d', 'TDNN', 'TDNN_att', 'TDNN_multihead', 'TDNN_lstm', 'TDNN_aspp', 'TDNN_mod', 'transformer'], default='resnet_mfcc', help='Model arch according to input type')
@@ -153,7 +154,7 @@ if __name__ == '__main__':
 						print('Skipping utterance '+ utt)
 						continue
 
-				feats = prep_feats(data[utt], args.max_dur, args.delta)
+				feats = prep_feats(data[utt], args.max_dur, args.max_nchunks, args.delta)
 
 				try:
 					if args.cuda:
