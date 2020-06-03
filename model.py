@@ -660,10 +660,12 @@ class ResNet_2d(nn.Module):
 
 class StatisticalPooling(nn.Module):
 
-	def forward(self, x):
+	def forward(self, x, mean_only=False, keep_dim=True):
 		# x is 3-D with axis [B, feats, T]
-		mu = x.mean(dim=2, keepdim=True)
-		std = (x+torch.randn_like(x)*1e-6).std(dim=2, keepdim=True)
+		mu = x.mean(dim=2, keepdim=keep_dim)
+		if mean_only:
+			return mu
+		std = (x+torch.randn_like(x)*1e-6).std(dim=2, keepdim=keep_dim)
 		return torch.cat((mu, std), dim=1)
 
 class TDNN(nn.Module):
@@ -715,6 +717,66 @@ class TDNN(nn.Module):
 		x = self.post_pooling_2(fc)
 
 		return x.squeeze(-1), fc.squeeze(-1)
+
+class TDNN_logpool(nn.Module):
+	def __init__(self, n_z=256, proj_size=0, ncoef=23, sm_type='none', delta=False):
+		super(TDNN_logpool, self).__init__()
+		self.delta=delta
+		self.model = nn.Sequential( nn.Conv1d(3*ncoef if delta else ncoef, 512, 5, padding=2),
+			nn.BatchNorm1d(512),
+			nn.ReLU(inplace=True),
+			nn.Conv1d(512, 512, 3, dilation=2, padding=2),
+			nn.BatchNorm1d(512),
+			nn.ReLU(inplace=True),
+			nn.Conv1d(512, 512, 3, dilation=3, padding=3),
+			nn.BatchNorm1d(512),
+			nn.ReLU(inplace=True),
+			nn.Conv1d(512, 512, 1),
+			nn.BatchNorm1d(512),
+			nn.ReLU(inplace=True),
+			nn.Conv1d(512, 1500, 1),
+			nn.BatchNorm1d(1500),
+			nn.ReLU(inplace=True) )
+
+		self.pooling = StatisticalPooling()
+
+		self.post_pooling_1_1 = nn.Linear(1500, 512)
+		self.post_pooling_1_2 = nn.Sequential(nn.BatchNorm1d(512), nn.ReLU(inplace=True) )
+
+		self.post_pooling_2_1 = nn.Linear(512, 512)
+		self.post_pooling_2_2 = nn.Sequential(nn.BatchNorm1d(512), nn.ReLU(inplace=True) )
+		self.post_pooling_2_3 = nn.Linear(512, proj_size)
+
+		if proj_size>0 and sm_type!='none':
+			if sm_type=='softmax':
+				self.out_proj=Softmax(input_features=proj_size, output_features=proj_size)
+			elif sm_type=='am_softmax':
+				self.out_proj=AMSoftmax(input_features=proj_size, output_features=proj_size)
+			else:
+				raise NotImplementedError
+
+	def forward(self, x):
+		if self.delta:
+			x=x.view(x.size(0), x.size(1)*x.size(2), x.size(3))
+
+		x = self.model(x.squeeze(1))
+
+		x = x.transpose(1,-1)
+		x_1 = self.post_pooling_1_1(x)
+		x_1 = x_1.transpose(1,-1)
+		x_1 = self.post_pooling_1_2(x_1)
+		x_1 = x_1.transpose(1,-1)
+
+		x_2 = self.post_pooling_2_1(x_1)
+		x_2 = x_2.transpose(1,-1)
+		x_2 = self.post_pooling_2_2(x_2)
+		x_2 = x_2.transpose(1,-1)
+		x_2 = self.post_pooling_2_3(x_2)
+
+		x_1, x_2 = x_1.transpose(1,-1), x_2.transpose(1,-1)
+		x_1, x_2 = self.pooling(x_1, mean_only=True, keep_dim=False), self.pooling(x_2, mean_only=True, keep_dim=False)
+
+		return x_2, x_1
 
 class TDNN_att(nn.Module):
 	def __init__(self, n_z=256, proj_size=0, ncoef=23, sm_type='none', delta=False):

@@ -37,7 +37,7 @@ if __name__ == '__main__':
 	parser.add_argument('--trials-path', type=str, default='./data/trials', metavar='Path', help='Path to trials file')
 	parser.add_argument('--cp-path', type=str, default=None, metavar='Path', help='Path for file containing model')
 	parser.add_argument('--ncoef', type=int, default=23, metavar='N', help='number of MFCCs (default: 23)')
-	parser.add_argument('--model', choices=['resnet_mfcc', 'resnet_34', 'resnet_lstm', 'resnet_qrnn', 'resnet_stats', 'resnet_large', 'resnet_small', 'resnet_2d', 'TDNN', 'TDNN_att', 'TDNN_multihead', 'TDNN_lstm', 'TDNN_aspp', 'TDNN_mod', 'transformer'], default='resnet_mfcc', help='Model arch according to input type')
+	parser.add_argument('--model', choices=['resnet_mfcc', 'resnet_34', 'resnet_lstm', 'resnet_qrnn', 'resnet_stats', 'resnet_large', 'resnet_small', 'resnet_2d', 'TDNN', 'TDNN_logpool', 'TDNN_att', 'TDNN_multihead', 'TDNN_lstm', 'TDNN_aspp', 'TDNN_mod', 'transformer'], default='resnet_mfcc', help='Model arch according to input type')
 	parser.add_argument('--delta', action='store_true', default=False, help='Enables extra data channels')
 	parser.add_argument('--inner', action='store_true', default=False, help='Get embeddings from inner layer')
 	parser.add_argument('--latent-size', type=int, default=200, metavar='S', help='latent layer dimension (default: 200)')
@@ -88,6 +88,8 @@ if __name__ == '__main__':
 			model = model_.ResNet_2d(n_z=args.latent_size, proj_size=0, ncoef=args.ncoef, delta = args.delta)
 		elif args.model == 'TDNN':
 			model = model_.TDNN(n_z=args.latent_size, proj_size=0, ncoef=args.ncoef, delta = args.delta)
+		elif args.model == 'TDNN_logpool':
+			model = model_.TDNN_logpool(n_z=args.latent_size, proj_size=0, ncoef=args.ncoef, delta = args.delta)
 		elif args.model == 'TDNN_att':
 			model = model_.TDNN_att(n_z=args.latent_size, proj_size=0, ncoef=args.ncoef, delta = args.delta)
 		elif args.model == 'TDNN_multihead':
